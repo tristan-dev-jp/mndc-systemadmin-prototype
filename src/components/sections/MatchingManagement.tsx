@@ -7,6 +7,7 @@ import {
   Users,
   Search,
   ChevronRight,
+  ArrowUpDown,
   Info,
   X,
 } from "lucide-react";
@@ -125,29 +126,153 @@ function CurrentMonthAllocationStatus() {
   const [allocations, setAllocations] = useState<MatchingAllocation[]>(
     mockMatchingAllocations
   );
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [fpTypeFilter, setFpTypeFilter] = useState("全て");
+  const [allocationTypeFilter, setAllocationTypeFilter] = useState("全て");
+  const [showInProgressOnly, setShowInProgressOnly] = useState(false);
+  const [completionDateRange, setCompletionDateRange] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({
+    start: null,
+    end: null,
+  });
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFpTypeFilter("全て");
+    setAllocationTypeFilter("全て");
+    setShowInProgressOnly(false);
+    setCompletionDateRange({ start: null, end: null });
+  };
+
+  // Mock function to handle date range changes
+  const handleDateRangeChange = (
+    dates: { start: Date | null; end: Date | null } | undefined
+  ) => {
+    setCompletionDateRange({
+      start: dates?.start || null,
+      end: dates?.end || null,
+    });
+  };
 
   const filteredAllocations = useMemo(() => {
-    return allocations.filter(
+    let filtered = allocations.filter(
       (alloc) =>
         alloc.fpName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alloc.fpEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alloc.fpCompany.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [allocations, searchTerm]);
+
+    if (fpTypeFilter !== "全て") {
+      filtered = filtered.filter((alloc) => alloc.fpType === fpTypeFilter);
+    }
+
+    if (allocationTypeFilter !== "全て") {
+      filtered = filtered.filter(
+        (alloc) => alloc.allocationType === allocationTypeFilter
+      );
+    }
+
+    if (showInProgressOnly) {
+      filtered = filtered.filter((alloc) => alloc.status !== "完了");
+    }
+
+    if (completionDateRange.start && completionDateRange.end) {
+      filtered = filtered.filter((alloc) => {
+        if (!alloc.completionDate) return false;
+        const completionDate = new Date(alloc.completionDate);
+        return (
+          completionDate >= completionDateRange.start! &&
+          completionDate <= completionDateRange.end!
+        );
+      });
+    }
+
+    return filtered;
+  }, [
+    allocations,
+    searchTerm,
+    fpTypeFilter,
+    allocationTypeFilter,
+    showInProgressOnly,
+    completionDateRange,
+  ]);
 
   return (
     <div className="space-y-6">
+      {/* Filter Controls */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="FP名/メールアドレス/所属会社で検索..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* FP種類 Filter */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                FP種類:
+              </label>
+              <select
+                value={fpTypeFilter}
+                onChange={(e) => setFpTypeFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="全て">全て</option>
+                <option value="個人">個人FP</option>
+                <option value="法人">法人FP</option>
+              </select>
+            </div>
+
+            {/* 割当種別 Filter */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                割当種別:
+              </label>
+              <select
+                value={allocationTypeFilter}
+                onChange={(e) => setAllocationTypeFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="全て">全て</option>
+                <option value="基本割当">基本配信</option>
+                <option value="追加配信依頼">追加配信依頼</option>
+              </select>
+            </div>
+
+            {/* 進行中 Filter */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="inProgressOnly"
+                checked={showInProgressOnly}
+                onChange={(e) => setShowInProgressOnly(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="inProgressOnly" className="text-sm text-gray-700">
+                進行中の割当ステータスのみ
+              </label>
+            </div>
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="flex items-center gap-2 bg-transparent"
+            >
+              <X className="h-4 w-4" />
+              条件をクリア
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="FP名/メールアドレス/所属会社で検索..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         </div>
       </div>
 
