@@ -274,22 +274,13 @@ export type PaymentMethod = {
 
 export type MatchingAllocation = {
   id: string;
-
   fpName: string;
-
   fpEmail: string;
-
   fpCompany: string;
-
   fpType: "個人" | "法人";
-
   allocationType: "基本割当" | "追加配信依頼";
-
   completedAllocations: number;
-
   totalAllocations: number;
-
   status: "未完了" | "完了";
-
   completionDate: string | null;
 };
