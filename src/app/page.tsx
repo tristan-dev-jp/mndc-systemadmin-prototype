@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { HeaderBar } from "@/components/layout/HeaderBar";
 import { UserManagementPage } from "@/components/sections/UserManagement";
 import { FPManagementPage } from "@/components/sections/FPManagement";
+import { MatchingManagementPage } from "@/components/sections/MatchingManagement";
 import { menuItems } from "@/data/menu";
 import type { MenuItem } from "@/data/menu";
 
@@ -34,6 +35,9 @@ export default function AdminDashboard() {
         return <UserManagementPage />;
       case "fp":
         return <FPManagementPage />;
+      // Add this case to render the new page
+      case "matching":
+        return <MatchingManagementPage />;
       default:
         return <PlaceholderContent item={currentItem} />;
     }
