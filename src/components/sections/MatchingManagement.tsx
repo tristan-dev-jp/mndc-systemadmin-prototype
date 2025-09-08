@@ -404,7 +404,6 @@ export function MatchingManagementPage() {
 
   const subMenus = [
     { id: "currentStatus", name: "今月の割当状況", icon: FileCheck },
-    { id: "fpAllocation", name: "各FPエンティティーの予定割当数", icon: Users },
     { id: "history", name: "マッチング・割当履歴", icon: History },
   ];
 
@@ -412,8 +411,6 @@ export function MatchingManagementPage() {
     switch (activeTab) {
       case "currentStatus":
         return <CurrentMonthAllocationStatus />;
-      case "fpAllocation":
-        return <PlaceholderComponent title="各FPエンティティーの予定割当数" />;
       case "history":
         return <PlaceholderComponent title="マッチング・割当履歴" />;
       default:
