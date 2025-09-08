@@ -284,3 +284,50 @@ export type MatchingAllocation = {
   status: "未完了" | "完了";
   completionDate: string | null;
 };
+
+export type MatchingHistory = {
+  id: string;
+  allocationDateTime: string;
+  fpName: string;
+  fpType: "個人" | "法人";
+  fpRole?: "管理者" | "スタッフ";
+  endUserName: string;
+  allocationType: "基本配信" | "追加配信依頼";
+  allocationMethod: "自動マッチング" | "手動割当";
+  currentStatus:
+    | "新規"
+    | "日程調整"
+    | "面談実施"
+    | "商品提案"
+    | "契約"
+    | "保留"
+    | "失注";
+  referringPartner: string;
+};
+
+// Defines an entry in the status history log
+export type StatusHistoryEntry = {
+  dateTime: string;
+  status: string;
+  updatedBy: string;
+  notes: string;
+};
+// Defines the detailed structure for the matching history modal
+export type MatchingHistoryDetails = {
+  matchId: string;
+  allocationDateTime: string;
+  allocationMethod: string;
+  matchingRules: string;
+  endUserName: string;
+  endUserAge: number;
+  endUserPrefecture: string;
+  consultationContent: string;
+  referringPartner: string;
+  registrationDate: string;
+  fpName: string;
+  fpType: string;
+  fpSpecialties: string[];
+  fpRank: number;
+  fpLocation: string;
+  statusHistory: StatusHistoryEntry[];
+};

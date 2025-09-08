@@ -20,9 +20,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { mockMatchingAllocations } from "@/data/matching";
+import {
+  mockMatchingAllocations,
+  mockMatchingHistory,
+  mockMatchingHistoryDetails,
+} from "@/data/matching";
 import { mockFPContract, mockFPDetails } from "@/data/fp";
-import type { MatchingAllocation } from "@/lib/types";
+import type {
+  MatchingAllocation,
+  MatchingHistory,
+  MatchingHistoryDetails,
+} from "@/lib/types";
 
 // ============================================================================
 // Details Modal Component
@@ -382,6 +390,399 @@ function CurrentMonthAllocationStatus() {
 }
 
 // ============================================================================
+// Matching History Details Modal Component
+// ============================================================================
+function MatchingHistoryDetailsModal({
+  historyDetails,
+}: {
+  historyDetails: MatchingHistoryDetails;
+}) {
+  return (
+    <DialogContent className="max-w-5xl">
+      <DialogHeader>
+        <DialogTitle className="text-xl">
+          マッチング詳細: {historyDetails.endUserName} vs{" "}
+          {historyDetails.fpName}
+        </DialogTitle>
+      </DialogHeader>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+        {/* Basic Info */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b pb-2">
+            マッチング基本情報
+          </h3>
+          <p>
+            <strong>マッチングID:</strong> {historyDetails.matchId}
+          </p>
+          <p>
+            <strong>割当日時:</strong> {historyDetails.allocationDateTime}
+          </p>
+          <p>
+            <strong>割当方法:</strong> {historyDetails.allocationMethod}
+          </p>
+          <p>
+            <strong>適用ルール:</strong> {historyDetails.matchingRules}
+          </p>
+        </div>
+
+        {/* End User Info */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b pb-2">
+            エンドユーザー情報
+          </h3>
+          <p>
+            <strong>氏名:</strong> {historyDetails.endUserName}
+          </p>
+          <p>
+            <strong>年齢:</strong> {historyDetails.endUserAge}歳
+          </p>
+          <p>
+            <strong>都道府県:</strong> {historyDetails.endUserPrefecture}
+          </p>
+          <p>
+            <strong>相談内容:</strong> {historyDetails.consultationContent}
+          </p>
+          <p>
+            <strong>紹介パートナー:</strong> {historyDetails.referringPartner}
+          </p>
+          <p>
+            <strong>登録日:</strong> {historyDetails.registrationDate}
+          </p>
+        </div>
+
+        {/* FP Info */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b pb-2">担当FP情報</h3>
+          <p>
+            <strong>氏名:</strong> {historyDetails.fpName}
+          </p>
+          <p>
+            <strong>種別:</strong> {historyDetails.fpType}
+          </p>
+          <p>
+            <strong>得意分野:</strong> {historyDetails.fpSpecialties.join(", ")}
+          </p>
+          <p>
+            <strong>ランク:</strong> {historyDetails.fpRank}
+          </p>
+          <p>
+            <strong>活動拠点:</strong> {historyDetails.fpLocation}
+          </p>
+        </div>
+      </div>
+
+      {/* Status History */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-lg border-b pb-2 mb-4">
+          ステータス変更履歴
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  日時
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  ステータス
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  更新者
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  備考
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {historyDetails.statusHistory.map((entry, index) => (
+                <tr key={index}>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    {entry.dateTime}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    <Badge variant="outline">{entry.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    {entry.updatedBy}
+                  </td>
+                  <td className="px-4 py-3 text-sm">{entry.notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </DialogContent>
+  );
+}
+
+// ============================================================================
+// Matching/Allocation History Component (Sub-menu 2)
+// ============================================================================
+function MatchingHistory() {
+  const [history, setHistory] =
+    useState<MatchingHistory[]>(mockMatchingHistory);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [fpTypeFilter, setFpTypeFilter] = useState("全て");
+  const [allocationTypeFilter, setAllocationTypeFilter] = useState("全て");
+  const [allocationDateRange, setAllocationDateRange] = useState<{
+    start: string;
+    end: string;
+  }>({
+    start: "",
+    end: "",
+  });
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFpTypeFilter("全て");
+    setAllocationTypeFilter("全て");
+    setAllocationDateRange({ start: "", end: "" });
+  };
+
+  const filteredHistory = useMemo(() => {
+    let filtered = history.filter(
+      (item) =>
+        item.fpName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.endUserName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.referringPartner.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (fpTypeFilter !== "全て") {
+      filtered = filtered.filter((item) => item.fpType === fpTypeFilter);
+    }
+
+    if (allocationTypeFilter !== "全て") {
+      filtered = filtered.filter(
+        (item) => item.allocationType === allocationTypeFilter
+      );
+    }
+
+    if (allocationDateRange.start && allocationDateRange.end) {
+      const startDate = new Date(allocationDateRange.start);
+      const endDate = new Date(allocationDateRange.end);
+      endDate.setHours(23, 59, 59, 999);
+
+      filtered = filtered.filter((item) => {
+        if (!item.allocationDateTime) return false;
+        const allocationDate = new Date(item.allocationDateTime);
+        return allocationDate >= startDate && allocationDate <= endDate;
+      });
+    }
+
+    return filtered;
+  }, [
+    history,
+    searchTerm,
+    fpTypeFilter,
+    allocationTypeFilter,
+    allocationDateRange,
+  ]);
+
+  const getStatusBadgeColor = (status: string) => {
+    const colors: { [key: string]: string } = {
+      新規: "bg-blue-100 text-blue-800",
+      日程調整: "bg-yellow-100 text-yellow-800",
+      面談実施: "bg-purple-100 text-purple-800",
+      商品提案: "bg-orange-100 text-orange-800",
+      契約: "bg-green-100 text-green-800",
+      保留: "bg-gray-100 text-gray-800",
+      失注: "bg-red-100 text-red-800",
+    };
+    return colors[status] || "bg-gray-100 text-gray-800";
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Filter Controls */}
+      <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-end gap-4">
+            {/* FP種類 Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                FP種類
+              </label>
+              <select
+                value={fpTypeFilter}
+                onChange={(e) => setFpTypeFilter(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="全て">全て</option>
+                <option value="個人">個人FP</option>
+                <option value="法人">法人FP</option>
+              </select>
+            </div>
+
+            {/* 割当種別 Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                割当種別
+              </label>
+              <select
+                value={allocationTypeFilter}
+                onChange={(e) => setAllocationTypeFilter(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="全て">全て</option>
+                <option value="基本配信">基本配信</option>
+                <option value="追加配信依頼">追加配信依頼</option>
+              </select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                割当日時 (開始)
+              </label>
+              <input
+                type="date"
+                value={allocationDateRange.start}
+                onChange={(e) =>
+                  setAllocationDateRange({
+                    ...allocationDateRange,
+                    start: e.target.value,
+                  })
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                割当日時 (終了)
+              </label>
+              <input
+                type="date"
+                value={allocationDateRange.end}
+                onChange={(e) =>
+                  setAllocationDateRange({
+                    ...allocationDateRange,
+                    end: e.target.value,
+                  })
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pt-2">
+            {/* Search Bar */}
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="FP名/エンドユーザー名/紹介パートナーで検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="flex items-center gap-2 bg-transparent"
+            >
+              <X className="h-4 w-4" />
+              条件をクリア
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  割当日時
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  担当FP
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  エンドユーザー
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  割当種別
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  割当方法
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  現在のステータス
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  紹介パートナー
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  アクション
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredHistory.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {item.allocationDateTime}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {item.fpName}
+                    <div className="text-xs text-gray-500">
+                      {item.fpType}
+                      {item.fpRole ? ` (${item.fpRole})` : ""}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {item.endUserName}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {item.allocationType}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {item.allocationMethod}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <Badge className={getStatusBadgeColor(item.currentStatus)}>
+                      {item.currentStatus}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {item.referringPartner}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          詳細
+                        </Button>
+                      </DialogTrigger>
+                      {mockMatchingHistoryDetails[item.id] && (
+                        <MatchingHistoryDetailsModal
+                          historyDetails={mockMatchingHistoryDetails[item.id]}
+                        />
+                      )}
+                    </Dialog>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredHistory.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <History className="mx-auto h-10 w-10 mb-2" />
+              該当する履歴情報がありません。
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // Placeholder for other sub-menus
 // ============================================================================
 function PlaceholderComponent({ title }: { title: string }) {
@@ -412,7 +813,7 @@ export function MatchingManagementPage() {
       case "currentStatus":
         return <CurrentMonthAllocationStatus />;
       case "history":
-        return <PlaceholderComponent title="マッチング・割当履歴" />;
+        return <MatchingHistory />;
       default:
         return null;
     }
