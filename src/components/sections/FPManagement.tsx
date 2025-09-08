@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 
 import {
@@ -57,6 +58,288 @@ import type {
   FPPayment,
   PaymentMethod,
 } from "@/lib/types";
+
+// ============================================================================
+// New FP Registration Modal Component
+// ============================================================================
+
+type NewFPFormData = {
+  fpType: "個人" | "法人";
+  name: string;
+  furigana: string;
+  email: string;
+  password: string;
+  companyName: string;
+  position: string;
+  role: "管理者" | "スタッフ";
+  workAddress: string;
+  initialRank: string;
+  monthlyAllocationLimit: string;
+  accountStatus: "活動中" | "停止中";
+};
+
+interface NewFPModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: NewFPFormData) => void;
+}
+
+function NewFPModal({ isOpen, onClose, onSubmit }: NewFPModalProps) {
+  const initialFormData: NewFPFormData = {
+    fpType: "法人",
+    name: "",
+    furigana: "",
+    email: "",
+    password: "",
+    companyName: "",
+    position: "",
+    role: "スタッフ",
+    workAddress: "",
+    initialRank: "3",
+    monthlyAllocationLimit: "10",
+    accountStatus: "活動中",
+  };
+
+  const [formData, setFormData] = useState<NewFPFormData>(initialFormData);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: keyof NewFPFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value as any }));
+  };
+
+  const handleSubmit = () => {
+    // Form submission logic will be fully implemented in Step 4
+    onSubmit(formData);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>新規FPアカウント登録</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+          {/* Section 1: Account Type */}
+          <div className="space-y-2">
+            <h4 className="font-semibold">アカウント種別</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="fpType" className="text-sm font-medium">
+                  FP種類 *
+                </label>
+                <Select
+                  value={formData.fpType}
+                  onValueChange={(value) => handleSelectChange("fpType", value)}
+                >
+                  <SelectTrigger id="fpType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="法人">法人</SelectItem>
+                    <SelectItem value="個人">個人</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Basic & Login Information */}
+          <div className="space-y-2">
+            <h4 className="font-semibold">基本・ログイン情報</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="name" className="text-sm font-medium">
+                  氏名 *
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="furigana" className="text-sm font-medium">
+                  フリガナ *
+                </label>
+                <Input
+                  id="furigana"
+                  name="furigana"
+                  value={formData.furigana}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="text-sm font-medium">
+                  メールアドレス *
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="text-sm font-medium">
+                  初期パスワード *
+                </label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Affiliation Information */}
+          <div className="space-y-2">
+            <h4 className="font-semibold">所属情報</h4>
+            {formData.fpType === "法人" ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="companyName" className="text-sm font-medium">
+                    所属会社名
+                  </label>
+                  <Input
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="position" className="text-sm font-medium">
+                    役職
+                  </label>
+                  <Input
+                    id="position"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="role" className="text-sm font-medium">
+                    権限 *
+                  </label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => handleSelectChange("role", value)}
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="管理者">管理者</SelectItem>
+                      <SelectItem value="スタッフ">スタッフ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="workAddress" className="text-sm font-medium">
+                  勤務地住所
+                </label>
+                <Input
+                  id="workAddress"
+                  name="workAddress"
+                  value={formData.workAddress}
+                  onChange={handleInputChange}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Section 4: System Settings */}
+          <div className="space-y-2">
+            <h4 className="font-semibold">システム設定</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="initialRank" className="text-sm font-medium">
+                  初期ランク *
+                </label>
+                <Select
+                  value={formData.initialRank}
+                  onValueChange={(value) =>
+                    handleSelectChange("initialRank", value)
+                  }
+                >
+                  <SelectTrigger id="initialRank">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map((rank) => (
+                      <SelectItem key={rank} value={String(rank)}>
+                        {rank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label
+                  htmlFor="monthlyAllocationLimit"
+                  className="text-sm font-medium"
+                >
+                  今月の割当上限 *
+                </label>
+                <Input
+                  id="monthlyAllocationLimit"
+                  name="monthlyAllocationLimit"
+                  type="number"
+                  value={formData.monthlyAllocationLimit}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="accountStatus" className="text-sm font-medium">
+                  アカウントステータス *
+                </label>
+                <Select
+                  value={formData.accountStatus}
+                  onValueChange={(value) =>
+                    handleSelectChange("accountStatus", value)
+                  }
+                >
+                  <SelectTrigger id="accountStatus">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="活動中">活動中</SelectItem>
+                    <SelectItem value="停止中">停止中</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            キャンセル
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            登録
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ============================================================================
 // FP Details View Component
@@ -923,6 +1206,7 @@ function FPDetails({ fpId, onBack }: { fpId: string; onBack: () => void }) {
 // FP List View (Main Component)
 // ============================================================================
 function FPList({ onFPClick }: { onFPClick: (fpId: string) => void }) {
+  const [fps, setFPs] = useState<FP[]>(mockFPs);
   const [searchTerm, setSearchTerm] = useState("");
   const [fpTypeFilter, setFpTypeFilter] = useState("全て");
   const [statusFilter, setStatusFilter] = useState("全て");
@@ -931,9 +1215,10 @@ function FPList({ onFPClick }: { onFPClick: (fpId: string) => void }) {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredFPs = useMemo(() => {
-    let filtered = mockFPs.filter((fp) => {
+    let filtered = fps.filter((fp) => {
       const matchesSearch =
         searchTerm === "" ||
         fp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -981,6 +1266,7 @@ function FPList({ onFPClick }: { onFPClick: (fpId: string) => void }) {
 
     return filtered;
   }, [
+    fps,
     searchTerm,
     fpTypeFilter,
     statusFilter,
@@ -1000,6 +1286,28 @@ function FPList({ onFPClick }: { onFPClick: (fpId: string) => void }) {
     setStatusFilter("全て");
     setShowIncompleteOnly(false);
     setCurrentPage(1);
+  };
+
+  const handleCreateFP = (data: NewFPFormData) => {
+    console.log("New FP Data Submitted:", data);
+
+    const newFP: FP = {
+      id: `FP${fps.length + 1}`, // Simple ID generation for prototype
+      name: data.name,
+      email: data.email,
+      fpType: data.fpType,
+      company: data.fpType === "法人" ? data.companyName : "",
+      joinDate: new Date().toISOString().slice(0, 10),
+      reviewCount: 0,
+      averageRating: 0,
+      rank: parseInt(data.initialRank, 10),
+      monthlyAssignment: `0/${data.monthlyAllocationLimit}`,
+      status: data.accountStatus,
+      role: data.role === "管理者" ? "管理者" : "一般",
+    };
+
+    setFPs((prevFPs) => [newFP, ...prevFPs]);
+    setIsModalOpen(false);
   };
 
   const handleSort = (column: string) => {
@@ -1049,11 +1357,20 @@ function FPList({ onFPClick }: { onFPClick: (fpId: string) => void }) {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">FP管理</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
           <Plus className="h-4 w-4 mr-2" />
           新規FPアカウント登録
         </Button>
       </div>
+
+      <NewFPModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateFP}
+      />
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
