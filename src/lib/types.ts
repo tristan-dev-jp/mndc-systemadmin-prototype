@@ -331,3 +331,13 @@ export type MatchingHistoryDetails = {
   fpLocation: string;
   statusHistory: StatusHistoryEntry[];
 };
+
+// Defines the structure for a Partner
+export type Partner = {
+  id: string;
+  name: string;
+  contactEmail: string;
+  lpUrl: string;
+  status: "アクティブ" | "停止中";
+  lastUpdated: string;
+};
