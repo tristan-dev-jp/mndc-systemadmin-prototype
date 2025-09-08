@@ -526,6 +526,8 @@ function MatchingHistory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [fpTypeFilter, setFpTypeFilter] = useState("全て");
   const [allocationTypeFilter, setAllocationTypeFilter] = useState("全て");
+  const [partnerFilter, setPartnerFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("全て");
   const [allocationDateRange, setAllocationDateRange] = useState<{
     start: string;
     end: string;
@@ -534,11 +536,23 @@ function MatchingHistory() {
     end: "",
   });
 
+  const uniquePartners = useMemo(() => {
+    const partners = new Set(history.map((item) => item.referringPartner));
+    return Array.from(partners);
+  }, [history]);
+
+  const uniqueStatuses = useMemo(() => {
+    const statuses = new Set(history.map((item) => item.currentStatus));
+    return Array.from(statuses);
+  }, [history]);
+
   const clearFilters = () => {
     setSearchTerm("");
     setFpTypeFilter("全て");
     setAllocationTypeFilter("全て");
     setAllocationDateRange({ start: "", end: "" });
+    setPartnerFilter("");
+    setStatusFilter("全て");
   };
 
   const filteredHistory = useMemo(() => {
@@ -557,6 +571,18 @@ function MatchingHistory() {
       filtered = filtered.filter(
         (item) => item.allocationType === allocationTypeFilter
       );
+    }
+
+    if (partnerFilter) {
+      filtered = filtered.filter((item) =>
+        item.referringPartner
+          .toLowerCase()
+          .includes(partnerFilter.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== "全て") {
+      filtered = filtered.filter((item) => item.currentStatus === statusFilter);
     }
 
     if (allocationDateRange.start && allocationDateRange.end) {
@@ -578,6 +604,8 @@ function MatchingHistory() {
     fpTypeFilter,
     allocationTypeFilter,
     allocationDateRange,
+    partnerFilter,
+    statusFilter,
   ]);
 
   const getStatusBadgeColor = (status: string) => {
@@ -628,6 +656,45 @@ function MatchingHistory() {
                 <option value="全て">全て</option>
                 <option value="基本配信">基本配信</option>
                 <option value="追加配信依頼">追加配信依頼</option>
+              </select>
+            </div>
+
+            {/* 紹介パートナー Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                紹介パートナー
+              </label>
+              <input
+                type="text"
+                list="partners"
+                value={partnerFilter}
+                onChange={(e) => setPartnerFilter(e.target.value)}
+                placeholder="パートナー名で検索"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <datalist id="partners">
+                {uniquePartners.map((partner) => (
+                  <option key={partner} value={partner} />
+                ))}
+              </datalist>
+            </div>
+
+            {/* 現在のステータス Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                現在のステータス
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="全て">全て</option>
+                {uniqueStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
 
