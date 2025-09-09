@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   output: "export",
 
   // Set the base path to your repository name
-  basePath: "/mndc-systemadmin-prototype",
+  // basePath: "/mndc-systemadmin-prototype",
 };
 
 export default nextConfig;

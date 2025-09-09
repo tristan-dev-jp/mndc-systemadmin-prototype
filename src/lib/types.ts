@@ -341,3 +341,52 @@ export type Partner = {
   status: "アクティブ" | "停止中";
   lastUpdated: string;
 };
+
+export interface PartnerDetails {
+  id: string;
+  companyInfo: {
+    name: string;
+    representativeName: string;
+    contactEmail: string;
+    phoneNumber: string;
+    address: string;
+    contactPersonName: string;
+    contactPersonDepartment: string;
+  };
+  contractInfo: {
+    startDate: string;
+    endDate: string;
+    status: "有効" | "無効" | "期限切れ";
+    referralFee: string;
+  };
+  usageStatus: {
+    accountStatus: "アクティブ" | "停止中";
+  };
+  activeUrl: string;
+  urlHistory: PartnerUrlHistory[];
+}
+
+export interface PartnerPerformanceSummary {
+  totalLeads: number;
+  accountsCreated: number;
+  autoRejected: number;
+  manualRejected: number;
+}
+
+export interface PartnerLeadHistory {
+  receivedDateTime: string;
+  userId: string;
+  userName: string;
+  age: number;
+  prefecture: string;
+  consultationContent: string;
+  approvalStatus: "承認済み" | "拒否" | "保留中";
+  currentConsultationStatus: string;
+}
+
+export interface PartnerUrlHistory {
+  generationDate: string;
+  url: string;
+  status: "利用中" | "停止済み";
+  leadsCount: number;
+}
