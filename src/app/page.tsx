@@ -7,6 +7,7 @@ import { UserManagementPage } from "@/components/sections/UserManagement";
 import { FPManagementPage } from "@/components/sections/FPManagement";
 import { MatchingManagementPage } from "@/components/sections/MatchingManagement";
 import { PartnerManagementPage } from "@/components/sections/PartnerManagement";
+import { ReviewManagementPage } from "@/components/sections/ReviewManagement";
 import { menuItems } from "@/data/menu";
 import type { MenuItem } from "@/data/menu";
 
@@ -41,6 +42,8 @@ export default function AdminDashboard() {
         return <MatchingManagementPage />;
       case "partners":
         return <PartnerManagementPage />;
+      case "reviews":
+        return <ReviewManagementPage />;
       default:
         return <PlaceholderContent item={currentItem} />;
     }

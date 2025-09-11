@@ -390,3 +390,16 @@ export interface PartnerUrlHistory {
   status: "利用中" | "停止済み";
   leadsCount: number;
 }
+
+// Defines the structure for a review record in the review management list
+export type ReviewRecord = {
+  id: string;
+  postedAt: string;
+  reviewerName: string;
+  reviewerType: "エンドユーザー" | "システム管理者";
+  fpName: string;
+  fpType: "個人FP" | "法人FP";
+  rating: number;
+  reviewContent: string;
+  statusAtReview: "新規" | "日程調整" | "面談実施" | "商品提案" | "契約";
+};
