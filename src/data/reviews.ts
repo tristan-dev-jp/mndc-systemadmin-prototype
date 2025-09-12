@@ -1,5 +1,15 @@
 import type { ReviewRecord } from "@/lib/types";
 
+export const consultationTopicsOptions = [
+  "ライフプランのご相談",
+  "保険のご相談",
+  "家計のご相談",
+  "資金運用のご相談",
+  "老後資金のご相談",
+  "NISA/iDECOのご相談",
+  "多額資金の一括運用のご相談",
+];
+
 export const mockReviews: ReviewRecord[] = [
   {
     id: "REV001",
@@ -12,6 +22,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "とても親切で分かりやすく、将来のライフプランについて具体的なアドバイスをいただけました。非常に満足しています。",
     statusAtReview: "面談実施",
+    consultationTopics: ["ライフプランのご相談", "資金運用のご相談"],
   },
   {
     id: "REV002",
@@ -24,6 +35,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "対応は迅速で丁寧ですが、提案内容にもう少し深みが欲しいと感じました。今後の改善に期待します。",
     statusAtReview: "契約",
+    consultationTopics: ["保険のご相談"],
   },
   {
     id: "REV003",
@@ -36,6 +48,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "NISAの始め方について相談しました。初心者にも分かりやすい言葉で説明してくださり、安心して始めることができました。",
     statusAtReview: "商品提案",
+    consultationTopics: ["NISA/iDECOのご相談"],
   },
   {
     id: "REV004",
@@ -48,6 +61,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "顧客からの評判が非常に良く、成約率も高い。信頼できるパートナーです。",
     statusAtReview: "契約",
+    consultationTopics: ["資金運用のご相談", "老後資金のご相談"],
   },
   {
     id: "REV005",
@@ -59,6 +73,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 2,
     reviewContent: "予約した時間に連絡がありませんでした。少し残念です。",
     statusAtReview: "日程調整",
+    consultationTopics: ["家計のご相談"],
   },
   {
     id: "REV006",
@@ -71,6 +86,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "顧客へのフォローが手厚い。レスポンスも早く、安心して任せられる。",
     statusAtReview: "面談実施",
+    consultationTopics: ["ライフプランのご相談"],
   },
   {
     id: "REV007",
@@ -83,6 +99,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "会社の資産運用について相談しました。非常に的確なアドバイスで、経営の助けになりました。",
     statusAtReview: "契約",
+    consultationTopics: ["多額資金の一括運用のご相談"],
   },
   {
     id: "REV008",
@@ -95,6 +112,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "説明は分かりやすかったですが、提案された商品が少し期待と違いました。",
     statusAtReview: "商品提案",
+    consultationTopics: ["保険のご相談"],
   },
   {
     id: "REV009",
@@ -106,6 +124,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 5,
     reviewContent: "iDeCoの始め方から丁寧に教えていただき、感謝しています。",
     statusAtReview: "契約",
+    consultationTopics: ["NISA/iDECOのご相談"],
   },
   {
     id: "REV010",
@@ -118,6 +137,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "専門性は高いが、顧客とのコミュニケーションに課題が見られるケースが報告されている。",
     statusAtReview: "面談実施",
+    consultationTopics: ["資金運用のご相談"],
   },
   {
     id: "REV011",
@@ -129,6 +149,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 4,
     reviewContent: "複数の保険商品を比較検討でき、最適なものを選べました。",
     statusAtReview: "契約",
+    consultationTopics: ["保険のご相談"],
   },
   {
     id: "REV012",
@@ -141,6 +162,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "相続について相談しました。複雑な内容も分かりやすく整理していただき、大変助かりました。",
     statusAtReview: "面談実施",
+    consultationTopics: ["老後資金のご相談"],
   },
   {
     id: "REV013",
@@ -152,6 +174,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 1,
     reviewContent: "約束の時間になっても連絡がなく、面談ができませんでした。",
     statusAtReview: "日程調整",
+    consultationTopics: ["家計のご相談"],
   },
   {
     id: "REV014",
@@ -164,6 +187,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "顧客満足度が非常に高く、リピート相談も多い。素晴らしいFPです。",
     statusAtReview: "契約",
+    consultationTopics: ["ライフプランのご相談"],
   },
   {
     id: "REV015",
@@ -176,6 +200,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "老後資金のシミュレーションが具体的で、将来への不安が和らぎました。",
     statusAtReview: "商品提案",
+    consultationTopics: ["老後資金のご相談"],
   },
   {
     id: "REV016",
@@ -187,6 +212,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 5,
     reviewContent: "とても親身になって話を聞いてくれました。感謝しています。",
     statusAtReview: "面談実施",
+    consultationTopics: ["家計のご相談"],
   },
   {
     id: "REV017",
@@ -199,6 +225,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "安定したパフォーマンス。ただし、新規顧客へのアプローチがやや画一的。",
     statusAtReview: "契約",
+    consultationTopics: ["多額資金の一括運用のご相談"],
   },
   {
     id: "REV018",
@@ -211,6 +238,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "全体的には満足ですが、もう少しレスポンスが早いと嬉しいです。",
     statusAtReview: "日程調整",
+    consultationTopics: ["保険のご相談"],
   },
   {
     id: "REV019",
@@ -223,6 +251,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "教育資金の相談をしました。子供の将来を考えた素晴らしい提案でした。",
     statusAtReview: "契約",
+    consultationTopics: ["ライフプランのご相談"],
   },
   {
     id: "REV020",
@@ -235,6 +264,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "保険の見直しで相談しました。家計に合ったプランを提案してくれました。",
     statusAtReview: "商品提案",
+    consultationTopics: ["保険のご相談"],
   },
   {
     id: "REV021",
@@ -246,6 +276,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 2,
     reviewContent: "専門用語が多く、少し理解が難しかったです。",
     statusAtReview: "面談実施",
+    consultationTopics: ["資金運用のご相談"],
   },
   {
     id: "REV022",
@@ -257,6 +288,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 5,
     reviewContent: "新規契約数が今月トップ。非常に優秀。",
     statusAtReview: "契約",
+    consultationTopics: ["多額資金の一括運用のご相談"],
   },
   {
     id: "REV023",
@@ -268,6 +300,7 @@ export const mockReviews: ReviewRecord[] = [
     rating: 4,
     reviewContent: "とても話しやすい方でした。また相談したいです。",
     statusAtReview: "面談実施",
+    consultationTopics: ["NISA/iDECOのご相談"],
   },
   {
     id: "REV024",
@@ -280,6 +313,7 @@ export const mockReviews: ReviewRecord[] = [
     reviewContent:
       "具体的な数字で示してくれたので、とても分かりやすかったです。",
     statusAtReview: "商品提案",
+    consultationTopics: ["老後資金のご相談"],
   },
   {
     id: "REV025",
@@ -291,5 +325,6 @@ export const mockReviews: ReviewRecord[] = [
     rating: 4,
     reviewContent: "こちらの要望を丁寧にヒアリングしてくれました。",
     statusAtReview: "日程調整",
+    consultationTopics: ["家計のご相談"],
   },
 ];

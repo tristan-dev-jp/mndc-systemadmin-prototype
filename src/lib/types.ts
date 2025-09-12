@@ -402,4 +402,5 @@ export type ReviewRecord = {
   rating: number;
   reviewContent: string;
   statusAtReview: "新規" | "日程調整" | "面談実施" | "商品提案" | "契約";
+  consultationTopics?: string[];
 };

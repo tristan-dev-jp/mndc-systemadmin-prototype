@@ -1,9 +1,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Star, Plus } from "lucide-react";
+import { Search, Star, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Combobox } from "@/components/ui/combobox";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,8 +32,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { mockReviews } from "@/data/reviews";
-import type { ReviewRecord } from "@/lib/types";
+import { mockReviews, consultationTopicsOptions } from "@/data/reviews";
+import { mockFPs } from "@/data/fp";
+import type { ReviewRecord, FP } from "@/lib/types";
 
 // Helper function to render star ratings
 const renderStars = (rating: number) => {
@@ -39,8 +52,175 @@ const renderStars = (rating: number) => {
   );
 };
 
+// ============================================================================
+// Create Review Modal Component
+// ============================================================================
+interface CreateReviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (newReview: Omit<ReviewRecord, "id" | "postedAt">) => void;
+  fps: FP[];
+}
+
+function CreateReviewModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  fps,
+}: CreateReviewModalProps) {
+  const [selectedFp, setSelectedFp] = useState<string | undefined>();
+  const [statusAtReview, setStatusAtReview] =
+    useState<ReviewRecord["statusAtReview"]>("新規");
+  const [rating, setRating] = useState(0);
+  const [reviewContent, setReviewContent] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+
+  const fpOptions = useMemo(
+    () => fps.map((fp) => ({ label: fp.name, value: fp.id })),
+    [fps]
+  );
+
+  const handleTopicChange = (topic: string, checked: boolean) => {
+    setSelectedTopics((prev) =>
+      checked ? [...prev, topic] : prev.filter((t) => t !== topic)
+    );
+  };
+
+  const handleSubmit = () => {
+    if (!selectedFp || rating === 0 || !reviewContent) {
+      alert("必須フィールドを入力してください。");
+      return;
+    }
+    const fp = fps.find((f) => f.id === selectedFp);
+    if (!fp) return;
+
+    onSubmit({
+      reviewerName: "システム管理者",
+      reviewerType: "システム管理者",
+      fpName: fp.name,
+      fpType: fp.fpType === "個人" ? "個人FP" : "法人FP",
+      rating,
+      reviewContent,
+      statusAtReview,
+      consultationTopics: selectedTopics,
+    });
+    handleClose();
+  };
+
+  const handleClose = () => {
+    // Reset form state
+    setSelectedFp(undefined);
+    setStatusAtReview("新規");
+    setRating(0);
+    setReviewContent("");
+    setSelectedTopics([]);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>新規レビュー作成</DialogTitle>
+          <DialogDescription>
+            FPへのレビューを新規作成します。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="fp-select">FP選択</Label>
+              <Combobox
+                options={fpOptions}
+                value={selectedFp}
+                onChange={setSelectedFp}
+                placeholder="FPを検索・選択..."
+                searchPlaceholder="FPを検索..."
+                emptyPlaceholder="FPが見つかりません。"
+              />
+            </div>
+            <div>
+              <Label htmlFor="status-select">レビュー投稿時のステータス</Label>
+              <Select
+                value={statusAtReview}
+                onValueChange={(v) => setStatusAtReview(v as any)}
+              >
+                <SelectTrigger id="status-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="新規">新規</SelectItem>
+                  <SelectItem value="日程調整">日程調整</SelectItem>
+                  <SelectItem value="面談実施">面談実施</SelectItem>
+                  <SelectItem value="商品提案">商品提案</SelectItem>
+                  <SelectItem value="契約">契約</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>評価</Label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`h-6 w-6 cursor-pointer ${
+                    star <= rating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="review-content">レビュー内容</Label>
+            <Textarea
+              id="review-content"
+              value={reviewContent}
+              onChange={(e) => setReviewContent(e.target.value)}
+              placeholder="詳細なレビュー内容"
+              rows={6}
+            />
+          </div>
+          <div>
+            <Label>ご相談内容（複数選択可）</Label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {consultationTopicsOptions.map((topic) => (
+                <div key={topic} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`topic-${topic}`}
+                    checked={selectedTopics.includes(topic)}
+                    onCheckedChange={(checked) =>
+                      handleTopicChange(topic, !!checked)
+                    }
+                  />
+                  <label
+                    htmlFor={`topic-${topic}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {topic}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            キャンセル
+          </Button>
+          <Button variant="secondary">プレビュー</Button>
+          <Button onClick={handleSubmit}>投稿</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function ReviewManagementPage() {
-  const [reviews] = useState<ReviewRecord[]>(mockReviews);
+  const [reviews, setReviews] = useState<ReviewRecord[]>(mockReviews);
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("全て");
   const [reviewerTypeFilter, setReviewerTypeFilter] = useState("全て");
@@ -48,6 +228,24 @@ export function ReviewManagementPage() {
   const [statusFilter, setStatusFilter] = useState("全て");
   // Placeholder for date range state
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddReview = (
+    newReviewData: Omit<ReviewRecord, "id" | "postedAt">
+  ) => {
+    const newReview: ReviewRecord = {
+      ...newReviewData,
+      id: `REV${String(reviews.length + 1).padStart(3, "0")}`,
+      postedAt: new Date().toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    setReviews((prev) => [newReview, ...prev]);
+  };
 
   const filteredReviews = useMemo(() => {
     return reviews.filter((review) => {
@@ -215,7 +413,10 @@ export function ReviewManagementPage() {
             </Select>
           </div>
           <div className="lg:col-span-2 flex justify-end">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Plus className="h-4 w-4 mr-2" />
               新規レビュー作成
             </Button>
@@ -278,6 +479,13 @@ export function ReviewManagementPage() {
           </Table>
         </div>
       </div>
+
+      <CreateReviewModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddReview}
+        fps={mockFPs}
+      />
     </div>
   );
 }
