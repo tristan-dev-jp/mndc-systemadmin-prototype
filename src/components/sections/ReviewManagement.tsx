@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Star, Plus, Check } from "lucide-react";
+import { Search, Star, Plus, Check, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -103,6 +103,7 @@ function CreateReviewModal({
       reviewContent,
       statusAtReview,
       consultationTopics: selectedTopics,
+      publicationStatus: "公開中", // Default to public on creation
     });
     handleClose();
   };
@@ -219,6 +220,99 @@ function CreateReviewModal({
   );
 }
 
+// ============================================================================
+// Review Details Modal Component
+// ============================================================================
+interface ReviewDetailsModalProps {
+  review: ReviewRecord | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onToggleStatus: (reviewId: string) => void;
+}
+
+function ReviewDetailsModal({
+  review,
+  isOpen,
+  onClose,
+  onToggleStatus,
+}: ReviewDetailsModalProps) {
+  if (!review) return null;
+
+  const isPublic = review.publicationStatus === "公開中";
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>レビュー詳細</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 py-4">
+          {/* レビュー情報 */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-gray-800">レビュー情報</h3>
+            <div className="text-sm space-y-2 rounded-md border p-4 bg-gray-50">
+              <p>
+                <strong>投稿者:</strong> {review.reviewerName} (
+                {review.reviewerType})
+              </p>
+              <p>
+                <strong>投稿日時:</strong> {review.postedAt}
+              </p>
+              <p>
+                <strong>対象FP:</strong> {review.fpName} ({review.fpType})
+              </p>
+              <div className="flex items-center">
+                <strong className="mr-2">評価:</strong>{" "}
+                {renderStars(review.rating)}{" "}
+                <span className="ml-2 text-gray-600">({review.rating}/5)</span>
+              </div>
+              <div>
+                <strong className="block mb-1">レビュー本文:</strong>
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {review.reviewContent}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 管理情報 */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-gray-800">管理情報</h3>
+            <div className="text-sm space-y-2 rounded-md border p-4 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <p>
+                  <strong>公開状況:</strong>{" "}
+                  <Badge
+                    className={
+                      isPublic
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }
+                  >
+                    {review.publicationStatus}
+                  </Badge>
+                </p>
+                <Button
+                  variant={isPublic ? "destructive" : "default"}
+                  onClick={() => onToggleStatus(review.id)}
+                  className={!isPublic ? "bg-green-600 hover:bg-green-700" : ""}
+                >
+                  {isPublic ? (
+                    <EyeOff className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Eye className="h-4 w-4 mr-2" />
+                  )}
+                  {isPublic ? "非公開にする" : "公開する"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function ReviewManagementPage() {
   const [reviews, setReviews] = useState<ReviewRecord[]>(mockReviews);
   const [searchTerm, setSearchTerm] = useState("");
@@ -226,9 +320,14 @@ export function ReviewManagementPage() {
   const [reviewerTypeFilter, setReviewerTypeFilter] = useState("全て");
   const [fpTypeFilter, setFpTypeFilter] = useState("全て");
   const [statusFilter, setStatusFilter] = useState("全て");
+  const [publicationStatusFilter, setPublicationStatusFilter] =
+    useState("全て");
   // Placeholder for date range state
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<ReviewRecord | null>(
+    null
+  );
 
   const handleAddReview = (
     newReviewData: Omit<ReviewRecord, "id" | "postedAt">
@@ -243,8 +342,24 @@ export function ReviewManagementPage() {
         hour: "2-digit",
         minute: "2-digit",
       }),
+      publicationStatus: newReviewData.publicationStatus,
     };
     setReviews((prev) => [newReview, ...prev]);
+  };
+
+  const handleToggleStatus = (reviewId: string) => {
+    setReviews((prevReviews) =>
+      prevReviews.map((r) => {
+        if (r.id === reviewId) {
+          const newStatus =
+            r.publicationStatus === "公開中" ? "非公開" : "公開中";
+          console.log(`Toggling status for review ${reviewId} to ${newStatus}`);
+          return { ...r, publicationStatus: newStatus };
+        }
+        return r;
+      })
+    );
+    setSelectedReview(null); // Close modal after action
   };
 
   const filteredReviews = useMemo(() => {
@@ -268,6 +383,10 @@ export function ReviewManagementPage() {
       const matchesStatus =
         statusFilter === "全て" || review.statusAtReview === statusFilter;
 
+      const matchesPublicationStatus =
+        publicationStatusFilter === "全て" ||
+        review.publicationStatus === publicationStatusFilter;
+
       // Date range filtering would be implemented here
       // const matchesDate = ...
 
@@ -276,7 +395,8 @@ export function ReviewManagementPage() {
         matchesRating &&
         matchesReviewerType &&
         matchesFpType &&
-        matchesStatus
+        matchesStatus &&
+        matchesPublicationStatus
       );
     });
   }, [
@@ -286,6 +406,7 @@ export function ReviewManagementPage() {
     reviewerTypeFilter,
     fpTypeFilter,
     statusFilter,
+    publicationStatusFilter,
   ]);
 
   const getReviewerTypeBadge = (type: ReviewRecord["reviewerType"]) => {
@@ -300,13 +421,21 @@ export function ReviewManagementPage() {
       : "bg-purple-100 text-purple-800 border-purple-200";
   };
 
+  const getPublicationStatusBadge = (
+    status: ReviewRecord["publicationStatus"]
+  ) => {
+    return status === "公開中"
+      ? "bg-green-100 text-green-800 border-green-200"
+      : "bg-red-100 text-red-800 border-red-200";
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">全レビュー一覧</h2>
 
       {/* Search and Filter Bar */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -379,8 +508,28 @@ export function ReviewManagementPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Publication Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              公開状況
+            </label>
+            <Select
+              value={publicationStatusFilter}
+              onValueChange={setPublicationStatusFilter}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="全て">全て</SelectItem>
+                <SelectItem value="公開中">公開中</SelectItem>
+                <SelectItem value="非公開">非公開</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
           {/* Date Range Filter (Placeholder) */}
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -412,7 +561,7 @@ export function ReviewManagementPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="lg:col-span-2 flex justify-end">
+          <div className="lg:col-span-3 flex justify-end">
             <Button
               onClick={() => setIsModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -438,6 +587,7 @@ export function ReviewManagementPage() {
                 <TableHead>評価</TableHead>
                 <TableHead>レビュー内容</TableHead>
                 <TableHead>レビュー記載時のステータス</TableHead>
+                <TableHead>公開状況</TableHead>
                 <TableHead>アクション</TableHead>
               </TableRow>
             </TableHeader>
@@ -469,7 +619,20 @@ export function ReviewManagementPage() {
                   </TableCell>
                   <TableCell>{review.statusAtReview}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
+                    <Badge
+                      className={getPublicationStatusBadge(
+                        review.publicationStatus
+                      )}
+                    >
+                      {review.publicationStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedReview(review)}
+                    >
                       詳細
                     </Button>
                   </TableCell>
@@ -485,6 +648,13 @@ export function ReviewManagementPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddReview}
         fps={mockFPs}
+      />
+
+      <ReviewDetailsModal
+        isOpen={!!selectedReview}
+        onClose={() => setSelectedReview(null)}
+        review={selectedReview}
+        onToggleStatus={handleToggleStatus}
       />
     </div>
   );
