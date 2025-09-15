@@ -405,3 +405,43 @@ export type ReviewRecord = {
   consultationTopics?: string[];
   publicationStatus: "公開中" | "非公開";
 };
+
+// Defines the structure for an FAQ item in the content management section
+export type FAQItem = {
+  id: string;
+  displayOrder: number;
+  category: string;
+  question: string;
+  answer: string;
+  publicationStatus: "公開中" | "非公開";
+  lastUpdated: string;
+};
+
+// Defines a single version of a legal document
+export interface DocumentVersion {
+  version: string;
+  uploadDate: string;
+  fileName: string;
+  fileUrl: string;
+}
+
+// Defines the structure for a legal document (e.g., ToS, Privacy Policy)
+export interface LegalDocument {
+  id: "tos" | "privacy";
+  name: string;
+  currentVersion: string;
+  lastUpdated: string;
+  publicationStatus: "公開中" | "非公開";
+  history: DocumentVersion[];
+}
+
+// Defines the structure for an Ad Banner
+export interface AdBanner {
+  id: string;
+  position: number; // 1, 2, or 3 for active slots, 0 for inactive
+  imageUrl: string;
+  linkUrl: string;
+  displayPeriod: string;
+  publicationStatus: "公開中" | "非公開";
+  clicks: number;
+}
