@@ -1,0 +1,58 @@
+import type { PaymentURL } from "@/lib/types";
+
+export const mockPaymentUrls: PaymentURL[] = [
+  {
+    id: "URL001",
+    urlName: "基本プラン初期決済用",
+    url: "https://moneydotcom.jp/link/creditcard/basic-firsttime-payment",
+    status: "利用中",
+    creationDate: "2024/09/15",
+    lastPaymentDate: "2024/09/18",
+    paymentCount: 47,
+  },
+  {
+    id: "URL002",
+    urlName: "ビジネスプラン初期決済用",
+    url: "https://moneydotcom.jp/link/creditcard/business-firsttime-payment",
+    status: "利用中",
+    creationDate: "2024/08/22",
+    lastPaymentDate: "2024/09/17",
+    paymentCount: 23,
+  },
+  {
+    id: "URL003",
+    urlName: "エンタープライズプラン初期決済用",
+    url: "https://moneydotcom.jp/link/creditcard/enterprise-firsttime-payment",
+    status: "利用中",
+    creationDate: "2024/07/10",
+    lastPaymentDate: "2024/09/16",
+    paymentCount: 156,
+  },
+  {
+    id: "URL004",
+    urlName: "テスト決済URL",
+    url: "https://moneydotcom.jp/link/creditcard/test-payment",
+    status: "停止中",
+    creationDate: "2024/06/05",
+    lastPaymentDate: "2024/06/08",
+    paymentCount: 3,
+  },
+  {
+    id: "URL005",
+    urlName: "特別キャンペーン決済",
+    url: "https://moneydotcom.jp/link/creditcard/special-campaign",
+    status: "停止中",
+    creationDate: "2024/05/20",
+    lastPaymentDate: "2024/05/31",
+    paymentCount: 89,
+  },
+  {
+    id: "URL006",
+    urlName: "新規顧客向け決済URL",
+    url: "https://moneydotcom.jp/link/creditcard/new-customer",
+    status: "利用中",
+    creationDate: "2024/04/15",
+    lastPaymentDate: "2024/09/18",
+    paymentCount: 12,
+  },
+];

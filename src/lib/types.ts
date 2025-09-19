@@ -445,3 +445,14 @@ export interface AdBanner {
   publicationStatus: "公開中" | "非公開";
   clicks: number;
 }
+
+// Defines the structure for a payment URL record
+export type PaymentURL = {
+  id: string;
+  urlName: string;
+  url: string;
+  status: "利用中" | "停止中";
+  creationDate: string;
+  lastPaymentDate: string;
+  paymentCount: number;
+};
