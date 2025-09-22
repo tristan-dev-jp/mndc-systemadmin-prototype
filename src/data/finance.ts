@@ -1,4 +1,4 @@
-import type { PaymentURL } from "@/lib/types";
+import type { PaymentURL, PaymentUrlDetails } from "@/lib/types";
 
 export const mockPaymentUrls: PaymentURL[] = [
   {
@@ -56,3 +56,47 @@ export const mockPaymentUrls: PaymentURL[] = [
     paymentCount: 12,
   },
 ];
+
+export const mockPaymentUrlDetails: PaymentUrlDetails = {
+  id: "URL001",
+  basicInfo: {
+    urlName: "基本プラン初期決済用",
+    url: "https://moneydotcom.jp/link/creditcard/basic-firsttime-payment",
+    description:
+      "新規顧客向けの基本プラン（月額）の初回決済用のURLです。顧客がこのURLから決済を完了すると、自動的にサブスクリプションが開始されます。",
+    status: "利用中",
+    createdDate: "2024-09-15T10:30:00Z",
+    lastUpdated: "2024-09-20T14:00:00Z",
+  },
+  paymentSettings: {
+    amount: 4980,
+    paymentMethods: ["Credit card", "Debit card"],
+  },
+  customFields: [
+    {
+      id: "field1",
+      type: "Email",
+      label: "連絡先メールアドレス",
+      required: true,
+      value: "customer@example.com",
+    },
+    {
+      id: "field2",
+      type: "Name",
+      label: "氏名",
+      required: true,
+      value: "田中 太郎",
+    },
+    {
+      id: "field3",
+      type: "Address",
+      label: "住所",
+      required: false,
+      value: "住所を記入してください。",
+    },
+  ],
+  usageStatistics: {
+    totalPaymentCount: 47,
+    lastPaymentDate: "2024-09-18T18:45:00Z",
+  },
+};

@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { mockPaymentUrls } from "@/data/finance";
-import type { PaymentURL } from "@/lib/types";
+import { mockPaymentUrls, mockPaymentUrlDetails } from "@/data/finance";
+import type { PaymentURL, PaymentUrlDetails, CustomField } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,7 +28,39 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Search, ArrowUpDown, Plus, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import {
+  Search,
+  ArrowUpDown,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Copy,
+  Edit,
+  Save,
+} from "lucide-react";
 
 // Define the type for the tabs
 type FinanceTab =
@@ -48,6 +80,424 @@ const PlaceholderContent = ({ title }: { title: string }) => (
 );
 
 // ============================================================================
+// Payment URL Details Modal Component
+// ============================================================================
+interface PaymentUrlDetailsModalProps {
+  urlId: string;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const PaymentUrlDetailsModal: React.FC<PaymentUrlDetailsModalProps> = ({
+  urlId,
+  isOpen,
+  onClose,
+}) => {
+  const { toast } = useToast();
+  const details = mockPaymentUrlDetails; // Using static mock data
+
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "コピーしました",
+      description: "URLがクリップボードにコピーされました。",
+    });
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    return <p className="text-sm p-2 h-10 flex items-center bg-gray-100 rounded-md">{field.value || "-"}</p>;
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">決済URL詳細</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            {details.basicInfo.urlName}
+          </p>
+        </DialogHeader>
+
+        <div className="flex-grow overflow-y-auto pr-6 pl-2 space-y-8 py-4">
+          {/* Section 1: Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">基本情報</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="urlName">URL名</Label>
+                <p className="text-sm p-2 h-10 flex items-center bg-gray-100 rounded-md">
+                  {details.basicInfo.urlName}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="url">URL</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="url"
+                    value={details.basicInfo.url}
+                    readOnly
+                    className="bg-gray-100"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleCopyToClipboard(details.basicInfo.url)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="description">説明</Label>
+                <p className="text-sm p-2 whitespace-pre-wrap min-h-[100px] bg-gray-100 rounded-md">
+                  {details.basicInfo.description}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>ステータス</Label>
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch
+                    checked={details.basicInfo.status === "利用中"}
+                    disabled={true}
+                  />
+                  <span
+                    className={cn(
+                      "font-medium",
+                      details.basicInfo.status === "利用中"
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    )}
+                  >
+                    {details.basicInfo.status}
+                  </span>
+                </div>
+              </div>
+              <div /> {/* Spacer */}
+              <div className="space-y-2">
+                <Label>作成日</Label>
+                <p className="text-sm p-2">
+                  {new Date(details.basicInfo.createdDate).toLocaleDateString(
+                    "ja-JP"
+                  )}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>最終更新日</Label>
+                <p className="text-sm p-2">
+                  {new Date(details.basicInfo.lastUpdated).toLocaleDateString(
+                    "ja-JP"
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Payment Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">決済設定</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-2">
+                <Label>金額設定</Label>
+                <p className="text-sm p-2">
+                  {details.paymentSettings.amount.toLocaleString()}円
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>決済方法</Label>
+                <div className="flex gap-2 p-2">
+                  {details.paymentSettings.paymentMethods.map((method) => (
+                    <Badge key={method} variant="secondary">
+                      {method}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Custom Fields */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">カスタム項目</h3>
+            <div className="space-y-4">
+              {details.customFields.map((field) => (
+                <div key={field.id} className="grid grid-cols-1 gap-x-8">
+                  <div className="space-y-2">
+                    <Label htmlFor={`custom-field-${field.id}`}>
+                      {field.label}{" "}
+                      {field.required && (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </Label>
+                    {renderCustomField(field)}
+                  </div>
+                </div>
+              ))}
+              {details.customFields.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  カスタム項目はありません。
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Section 4: Usage Statistics */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">利用統計</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-2">
+                <Label>決済回数</Label>
+                <p className="text-3xl font-bold p-2">
+                  {details.usageStatistics.totalPaymentCount.toLocaleString()}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>最終決済発生日</Label>
+                <p className="text-sm p-2">
+                  {new Date(
+                    details.usageStatistics.lastPaymentDate
+                  ).toLocaleString("ja-JP")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-auto pt-4 border-t">
+          <div className="flex justify-between w-full">
+            <div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="text-yellow-600 border-yellow-500 hover:bg-yellow-50 hover:text-yellow-700"
+                  >
+                    URLを無効化
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      本当にこのURLを無効化しますか？
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      この操作は元に戻せます。URLは一時的に利用できなくなります。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-yellow-500 hover:bg-yellow-600"
+                      onClick={() => {
+                        toast({ title: "URLを無効化しました (デモ)" });
+                      }}
+                    >
+                      無効化
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="ml-2">
+                    削除
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      本当にこのURLを削除しますか？
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      この操作は元に戻すことができません。関連するすべてのデータが完全に削除されます。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={() => {
+                        toast({
+                          variant: "destructive",
+                          title: "URLを削除しました (デモ)",
+                        });
+                        onClose();
+                      }}
+                    >
+                      削除
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={onClose}>
+                キャンセル
+              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Edit className="h-4 w-4 mr-2" />
+                編集
+              </Button>
+            </div>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ============================================================================
+// Create Payment URL Modal Component
+// ============================================================================
+interface CreatePaymentUrlModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CreatePaymentUrlModal: React.FC<CreatePaymentUrlModalProps> = ({ isOpen, onClose }) => {
+  const { toast } = useToast();
+  const [details, setDetails] = useState(mockPaymentUrlDetails); // Using static mock data for structure
+
+  const handleCreate = () => {
+    console.log("Creating new URL with details:", details);
+    toast({ title: "新規決済URLを発行しました (デモ)" });
+    onClose();
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    const fieldId = `new-custom-field-${field.id}`;
+    switch (field.type) {
+      case "Email":
+        return <Input id={fieldId} type="email" placeholder="email@example.com" />;
+      case "Name":
+        return <Input id={fieldId} type="text" placeholder="山田 太郎" />;
+      case "Phone number":
+        return <Input id={fieldId} type="tel" placeholder="090-1234-5678" />;
+      case "Address":
+        return <Textarea id={fieldId} placeholder="東京都千代田区..." rows={3} />;
+      case "Notes":
+        return <Textarea id={fieldId} placeholder="補足事項..." rows={3} />;
+      case "Dropdown":
+        return (
+          <Select>
+            <SelectTrigger id={fieldId}>
+              <SelectValue placeholder="選択してください" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map(option => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      default:
+        return <Input type="text" readOnly value="Unknown field type" />;
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">新規決済URL発行</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-grow overflow-y-auto pr-6 pl-2 space-y-8 py-4">
+          {/* Section 1: Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">基本情報</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newUrlName">URL名</Label>
+                <Input id="newUrlName" placeholder="例：基本プラン初期費用" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newUrl">URL</Label>
+                <div className="flex items-center gap-2">
+                  <Input id="newUrl" value="https://moneydotcom.jp/link/creditcard/" readOnly className="bg-gray-100" />
+                </div>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="newDescription">説明</Label>
+                <Textarea id="newDescription" placeholder="この決済URLの目的や対象者などを記載します" rows={4} />
+              </div>
+              <div className="space-y-2">
+                <Label>ステータス</Label>
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch defaultChecked={true} />
+                  <span className="font-medium text-green-600">利用中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Payment Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">決済設定</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-2">
+                <Label>金額設定</Label>
+                <Input type="number" placeholder="例: 10000" />
+              </div>
+              <div className="space-y-2">
+                <Label>決済方法</Label>
+                <div className="flex gap-4 p-2">
+                  <div className="flex items-center gap-2">
+                     <Switch id="credit-card" defaultChecked={true} />
+                     <Label htmlFor="credit-card">Credit card</Label>
+                  </div>
+                   <div className="flex items-center gap-2">
+                     <Switch id="debit-card" defaultChecked={true} />
+                     <Label htmlFor="debit-card">Debit card</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Custom Fields */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">カスタム項目</h3>
+            <p className="text-sm text-muted-foreground">最大3つまで設定できます。</p>
+            <div className="space-y-4">
+              {details.customFields.map((field) => (
+                <div key={field.id} className="grid grid-cols-1 gap-x-8">
+                  <div className="space-y-2">
+                    <Label htmlFor={`new-custom-field-${field.id}`}>
+                      {field.label}{" "}
+                      {field.required && (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </Label>
+                    {renderCustomField(field)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-auto pt-4 border-t">
+          <div className="flex justify-end w-full gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              キャンセル
+            </Button>
+            <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              発行
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+// ============================================================================
 // Payment URL Management Tab Component
 // ============================================================================
 const PaymentUrlManagementTab = () => {
@@ -59,6 +509,8 @@ const PaymentUrlManagementTab = () => {
   }>({ key: "creationDate", direction: "desc" });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
+  const [selectedUrlId, setSelectedUrlId] = useState<string | null>(null);
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const handleSort = (key: keyof PaymentURL) => {
     let direction: "asc" | "desc" = "asc";
@@ -129,7 +581,7 @@ const PaymentUrlManagementTab = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">決済URL管理</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button onClick={() => setCreateModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="h-4 w-4 mr-2" />
           新規決済URL発行
         </Button>
@@ -224,7 +676,11 @@ const PaymentUrlManagementTab = () => {
                   {url.paymentCount.toLocaleString()}
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedUrlId(url.id)}
+                  >
                     詳細
                   </Button>
                 </TableCell>
@@ -280,12 +736,21 @@ const PaymentUrlManagementTab = () => {
           </div>
         </div>
       </div>
+
+      {selectedUrlId && (
+        <PaymentUrlDetailsModal
+          isOpen={!!selectedUrlId}
+          onClose={() => setSelectedUrlId(null)}
+          urlId={selectedUrlId}
+        />
+      )}
+      <CreatePaymentUrlModal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} />
     </div>
   );
 };
 
 export const FinanceManagementPage = () => {
-  const [activeTab, setActiveTab] = useState<FinanceTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<FinanceTab>("payment_url");
 
   const tabs = [
     { id: "dashboard", label: "ダッシュボード" },
@@ -311,6 +776,7 @@ export const FinanceManagementPage = () => {
 
   return (
     <div className="space-y-6">
+      <Toaster />
       <div>
         <h1 className="text-2xl font-bold">財務管理</h1>
         <p className="text-muted-foreground">

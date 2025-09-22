@@ -456,3 +456,35 @@ export type PaymentURL = {
   lastPaymentDate: string;
   paymentCount: number;
 };
+
+// Defines the structure for a custom field in the payment URL details modal
+export type CustomField = {
+  id: string;
+  type: "Email" | "Name" | "Phone number" | "Address" | "Notes" | "Dropdown";
+  label: string;
+  required: boolean;
+  value?: string;
+  options?: string[]; // For Dropdown type
+};
+
+// Defines the detailed structure for a single Payment URL
+export type PaymentUrlDetails = {
+  id: string;
+  basicInfo: {
+    urlName: string;
+    url: string;
+    description: string;
+    status: "利用中" | "停止中";
+    createdDate: string;
+    lastUpdated: string;
+  };
+  paymentSettings: {
+    amount: number;
+    paymentMethods: ("Credit card" | "Debit card")[];
+  };
+  customFields: CustomField[];
+  usageStatistics: {
+    totalPaymentCount: number;
+    lastPaymentDate: string;
+  };
+};
