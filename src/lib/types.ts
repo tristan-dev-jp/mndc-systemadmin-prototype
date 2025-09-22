@@ -488,3 +488,14 @@ export type PaymentUrlDetails = {
     lastPaymentDate: string;
   };
 };
+
+// Defines the structure for a subscription plan
+export type SubscriptionPlan = {
+  id: string;
+  planName: string;
+  price: number;
+  billingCycle: "月間請求" | "年間請求";
+  status: "有効" | "無効";
+  subscriberCount: number;
+  creationDate: string;
+};

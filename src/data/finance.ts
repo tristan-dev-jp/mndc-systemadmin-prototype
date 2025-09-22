@@ -1,4 +1,4 @@
-import type { PaymentURL, PaymentUrlDetails } from "@/lib/types";
+import type { PaymentURL, PaymentUrlDetails, SubscriptionPlan } from "@/lib/types";
 
 export const mockPaymentUrls: PaymentURL[] = [
   {
@@ -100,3 +100,33 @@ export const mockPaymentUrlDetails: PaymentUrlDetails = {
     lastPaymentDate: "2024-09-18T18:45:00Z",
   },
 };
+
+export const mockSubscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: "plan_001",
+    planName: "基本プラン",
+    price: 45000,
+    billingCycle: "月間請求",
+    status: "有効",
+    subscriberCount: 64,
+    creationDate: "2025/09/22",
+  },
+  {
+    id: "plan_002",
+    planName: "ビシネズプラン",
+    price: 200000,
+    billingCycle: "月間請求",
+    status: "有効",
+    subscriberCount: 87,
+    creationDate: "2025/09/22",
+  },
+  {
+    id: "plan_003",
+    planName: "エンタープライズプラン",
+    price: 750000,
+    billingCycle: "月間請求",
+    status: "有効",
+    subscriberCount: 8,
+    creationDate: "2025/09/22",
+  },
+];

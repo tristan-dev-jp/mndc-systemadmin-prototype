@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { mockPaymentUrls, mockPaymentUrlDetails } from "@/data/finance";
-import type { PaymentURL, PaymentUrlDetails, CustomField } from "@/lib/types";
+import { mockPaymentUrls, mockPaymentUrlDetails, mockSubscriptionPlans } from "@/data/finance";
+import type { PaymentURL, PaymentUrlDetails, CustomField, SubscriptionPlan } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,6 +60,7 @@ import {
   Copy,
   Edit,
   Save,
+  X,
 } from "lucide-react";
 
 // Define the type for the tabs
@@ -749,8 +750,188 @@ const PaymentUrlManagementTab = () => {
   );
 };
 
+// ============================================================================
+// Subscription Management Tab Component
+// ============================================================================
+const SubscriptionManagementTab = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("すべて");
+  const [billingCycleFilter, setBillingCycleFilter] = useState("すべて");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof SubscriptionPlan | null;
+    direction: "asc" | "desc";
+  }>({ key: "creationDate", direction: "desc" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
+
+  const handleSort = (key: keyof SubscriptionPlan) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("すべて");
+    setBillingCycleFilter("すべて");
+  };
+
+  const filteredAndSortedPlans = useMemo(() => {
+    let filtered = mockSubscriptionPlans.filter((plan) => {
+      const matchesSearch = plan.planName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "すべて" || plan.status === statusFilter;
+      const matchesBillingCycle = billingCycleFilter === "すべて" || plan.billingCycle === billingCycleFilter;
+      return matchesSearch && matchesStatus && matchesBillingCycle;
+    });
+
+    if (sortConfig.key) {
+      const key = sortConfig.key;
+      filtered.sort((a, b) => {
+        const aValue = a[key];
+        const bValue = b[key];
+        let comparison = 0;
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          if (key === 'creationDate') {
+            comparison = new Date(aValue).getTime() - new Date(bValue).getTime();
+          } else {
+            comparison = aValue.localeCompare(bValue);
+          }
+        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+          comparison = aValue - bValue;
+        }
+        return sortConfig.direction === "asc" ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [searchTerm, statusFilter, billingCycleFilter, sortConfig]);
+
+  const paginatedPlans = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedPlans.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedPlans, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedPlans.length / itemsPerPage);
+
+  const renderSortIcon = (key: keyof SubscriptionPlan) => {
+    if (sortConfig?.key !== key) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 text-muted-foreground" />;
+    }
+    return sortConfig.direction === "asc" ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">サブスクリプション管理</h2>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          新規プラン作成
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="プラン名で検索"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label>ステータス</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="すべて">すべて</SelectItem>
+              <SelectItem value="有効">有効</SelectItem>
+              <SelectItem value="無効">無効</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label>請求形式</Label>
+          <Select value={billingCycleFilter} onValueChange={setBillingCycleFilter}>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="すべて">すべて</SelectItem>
+              <SelectItem value="月間請求">月間請求</SelectItem>
+              <SelectItem value="年間請求">年間請求</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" onClick={clearFilters}>
+          <X className="h-4 w-4 mr-2" />
+          クリア
+        </Button>
+      </div>
+
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>プラン名</TableHead>
+              <TableHead><button className="flex items-center gap-1" onClick={() => handleSort('price')}>料金 {renderSortIcon('price')}</button></TableHead>
+              <TableHead>請求形式</TableHead>
+              <TableHead>ステータス</TableHead>
+              <TableHead><button className="flex items-center gap-1" onClick={() => handleSort('subscriberCount')}>加入者数 {renderSortIcon('subscriberCount')}</button></TableHead>
+              <TableHead><button className="flex items-center gap-1" onClick={() => handleSort('creationDate')}>作成日 {renderSortIcon('creationDate')}</button></TableHead>
+              <TableHead>アクション</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedPlans.map((plan) => (
+              <TableRow key={plan.id} className="hover:bg-muted/50">
+                <TableCell className="font-medium">{plan.planName}</TableCell>
+                <TableCell>{plan.price.toLocaleString()}円</TableCell>
+                <TableCell>{plan.billingCycle}</TableCell>
+                <TableCell>
+                  <Badge className={cn(plan.status === "有効" ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200")}>
+                    {plan.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{plan.subscriberCount.toLocaleString()}</TableCell>
+                <TableCell>{plan.creationDate}</TableCell>
+                <TableCell className="space-x-2">
+                  <Button variant="outline" size="sm">詳細</Button>
+                  <Button variant="destructive" size="sm">削除</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Label>表示件数</Label>
+          <Select value={String(itemsPerPage)} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
+            <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">30</SelectItem>
+              <SelectItem value="60">60</SelectItem>
+              <SelectItem value="90">90</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">{currentPage} / {totalPages} ページ</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>前へ</Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>次へ</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const FinanceManagementPage = () => {
-  const [activeTab, setActiveTab] = useState<FinanceTab>("payment_url");
+  const [activeTab, setActiveTab] = useState<FinanceTab>("subscription");
 
   const tabs = [
     { id: "dashboard", label: "ダッシュボード" },
@@ -766,7 +947,7 @@ export const FinanceManagementPage = () => {
       case "payment_url":
         return <PaymentUrlManagementTab />;
       case "subscription":
-        return <PlaceholderContent title="サブスクリプション管理" />;
+        return <SubscriptionManagementTab />;
       case "payment_history":
         return <PlaceholderContent title="決済履歴" />;
       default:
